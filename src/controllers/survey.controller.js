@@ -29,7 +29,7 @@ const createSurvey = async (req, res) => {
 const createQuestion = async (req, res) => {
     const { typeQuestion, question, answers } = req.body;
 
-    if (!!!typeQuestion || !!!question || !!!answers) {
+    if (!!!typeQuestion || !!!question) {
         res.status(400).json({
             message: 'Todos los campos son requeridos'
         });
@@ -40,7 +40,7 @@ const createQuestion = async (req, res) => {
     try {
 
         const survey = await Survey.findById({ _id: req.params.id })
-        if(!survey) {
+        if (!survey) {
             return res.status(404).json({
                 message: 'Encuesta no encontrada'
             })
@@ -50,8 +50,8 @@ const createQuestion = async (req, res) => {
         const questionSaved = await newQuestion.save();
 
         const updatedSurvey = await Survey.findByIdAndUpdate(
-            req.params.id, 
-            { $push: { questions: questionSaved._id } }, 
+            req.params.id,
+            { $push: { questions: questionSaved._id } },
             { new: true })
 
         res.status(200).json(updatedSurvey);
@@ -95,10 +95,10 @@ const updateSurvey = async (req, res) => {
 
     const { id } = req.params;
     const { title, description } = req.body;
-    
+
     try {
-        
-        const surveyUpdated = await Survey.findByIdAndUpdate(id, { title, description }, {new: true})
+
+        const surveyUpdated = await Survey.findByIdAndUpdate(id, { title, description }, { new: true })
         res.status(200).json(surveyUpdated)
 
     } catch (error) {
@@ -113,33 +113,33 @@ const updateQuestion = async (req, res) => {
 
     try {
 
-        const questionUpdated = await Question.findByIdAndUpdate( id, {question, answers}, {new: true})
+        const questionUpdated = await Question.findByIdAndUpdate(id, { question, answers }, { new: true })
         res.status(200).json(questionUpdated)
-        
+
     } catch (error) {
         res.status(500).json({
             error: 'Error al actualizar la pregunta'
         });
     }
-    
+
 }
 
 const deleteSurvey = async (req, res) => {
 
-    const { id } = req.params;  
+    const { id } = req.params;
 
     try {
 
         const deleteSurvey = await Survey.findByIdAndDelete(id);
 
-        if(!deleteSurvey) {
+        if (!deleteSurvey) {
             return res.status(404).json({
                 message: 'Encuesta no encontrada'
             })
         }
 
-        const deleteQuestion =  await Question.deleteMany({idSurvey: id})
-        if(!deleteQuestion) {
+        const deleteQuestion = await Question.deleteMany({ idSurvey: id })
+        if (!deleteQuestion) {
             return res.status(404).json({
                 message: 'Preguntas no encontradas'
             })
@@ -148,7 +148,7 @@ const deleteSurvey = async (req, res) => {
         res.status(200).json({
             message: 'Encuesta eliminada'
         })
-        
+
     } catch (error) {
         console.log(error)
         res.status(500).json({
@@ -158,4 +158,34 @@ const deleteSurvey = async (req, res) => {
 
 }
 
-module.exports = { createSurvey, createQuestion, getSurveyById, getSurveys, updateSurvey, updateQuestion, deleteSurvey }
+const deleteQuestion = async (req, res) => {
+    const { id } = req.params;
+    const { idSurvey } = req.body;
+
+    try {
+        const deleteQuestion = await Question.findByIdAndDelete(id);
+
+
+        if (!deleteQuestion) {
+            return res.status(404).json({
+                message: 'Pregunta no encontrada'
+            });
+        }
+
+        const updatedSurvey = await Survey.findByIdAndUpdate(
+            idSurvey,
+            { $pull: { questions: id } }, 
+            { new: true }
+        );
+
+        res.status(200).json(updatedSurvey);
+
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            error: 'Error al eliminar la pregunta'
+        })
+    }
+}
+
+module.exports = { createSurvey, createQuestion, getSurveyById, getSurveys, updateSurvey, updateQuestion, deleteSurvey, deleteQuestion }

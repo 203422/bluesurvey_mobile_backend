@@ -25,6 +25,8 @@ router.put('/surveys/:id', authenticate, surveyController.updateSurvey);
 router.put('/questions/:id', authenticate, surveyController.updateQuestion);
 //Eliminar encuestas
 router.delete('/surveys/:id', authenticate, surveyController.deleteSurvey);
+//Eliminar pregunta
+router.delete('/questions/:id', authenticate, surveyController.deleteQuestion);
 
 
 module.exports = router;
