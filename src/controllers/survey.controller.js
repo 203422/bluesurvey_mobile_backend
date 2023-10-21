@@ -198,12 +198,19 @@ const saveAnswers = async (req, res) => {
         for (const openResponse of responses.open) {
             const question = await Question.findById(openResponse.questionId);
             if (question) {
-                question.answers.push({ answer: openResponse.answer });
+                // Verifica si ya existe una respuesta igual
+                const existingAnswer = question.answers.find((a) => a.answer === openResponse.answer);
+                if (existingAnswer) {
+                    // Si la respuesta existe, aumenta el contador
+                    existingAnswer.count += 1;
+                } else {
+                    // Si la respuesta no existe, agrégala con un contador inicial de 1
+                    question.answers.push({ answer: openResponse.answer, count: 1 });
+                }
                 await question.save();
             }
         }
 
-        // Itera a través de las respuestas de preguntas de opción única y actualiza el modelo correspondiente
         for (const singleOptionResponse of responses.singleOption) {
             const question = await Question.findById(singleOptionResponse.questionId);
             if (question) {
@@ -215,7 +222,6 @@ const saveAnswers = async (req, res) => {
             }
         }
 
-        // Itera a través de las respuestas de preguntas de opción múltiple y actualiza el modelo correspondiente
         for (const multipleOptionResponse of responses.multipleOption) {
             const question = await Question.findById(multipleOptionResponse.questionId);
             if (question) {
@@ -239,7 +245,6 @@ const saveAnswers = async (req, res) => {
         });
         console.log(error);
     }
-
 }
 
 module.exports = { createSurvey, createQuestion, getSurveyById, getSurveys, updateSurvey, updateQuestion, deleteSurvey, deleteQuestion, saveAnswers }
