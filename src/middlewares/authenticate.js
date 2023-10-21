@@ -1,7 +1,12 @@
 const getTokenFromHeader = require("../auth/getTokenFromHeader");
 const verifyToken = require("../auth/verifyToken");
 
-const authenticate = (req, res, next) => {
+const authenticate = (requireAuth = true) => (req, res, next) => {
+
+    if(!requireAuth) {
+        next();
+        return;
+    }
 
     const token = getTokenFromHeader(req.headers);
 

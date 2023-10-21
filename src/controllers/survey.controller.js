@@ -174,7 +174,7 @@ const deleteQuestion = async (req, res) => {
 
         const updatedSurvey = await Survey.findByIdAndUpdate(
             idSurvey,
-            { $pull: { questions: id } }, 
+            { $pull: { questions: id } },
             { new: true }
         );
 
@@ -188,4 +188,58 @@ const deleteQuestion = async (req, res) => {
     }
 }
 
-module.exports = { createSurvey, createQuestion, getSurveyById, getSurveys, updateSurvey, updateQuestion, deleteSurvey, deleteQuestion }
+const saveAnswers = async (req, res) => {
+
+    const { responses } = req.body;
+    console.log(responses);
+
+    try {
+
+        for (const openResponse of responses.open) {
+            const question = await Question.findById(openResponse.questionId);
+            if (question) {
+                question.answers.push({ answer: openResponse.answer });
+                await question.save();
+            }
+        }
+
+        // Itera a través de las respuestas de preguntas de opción única y actualiza el modelo correspondiente
+        for (const singleOptionResponse of responses.singleOption) {
+            const question = await Question.findById(singleOptionResponse.questionId);
+            if (question) {
+                const answerIndex = question.answers.findIndex((a) => a.answer === singleOptionResponse.answer);
+                if (answerIndex !== -1) {
+                    question.answers[answerIndex].count += 1;
+                    await question.save();
+                }
+            }
+        }
+
+        // Itera a través de las respuestas de preguntas de opción múltiple y actualiza el modelo correspondiente
+        for (const multipleOptionResponse of responses.multipleOption) {
+            const question = await Question.findById(multipleOptionResponse.questionId);
+            if (question) {
+                multipleOptionResponse.answers.forEach((selectedAnswer) => {
+                    const answerIndex = question.answers.findIndex((a) => a.answer === selectedAnswer);
+                    if (answerIndex !== -1) {
+                        question.answers[answerIndex].count += 1;
+                    }
+                });
+                await question.save();
+            }
+        }
+
+        res.status(200).json({
+            'message': 'Respuestas guardadas exitosamente'
+        })
+
+    } catch (error) {
+        res.status(500).json({
+            'error': 'Eror al guardar las respuestas'
+        });
+        console.log(error);
+    }
+
+}
+
+module.exports = { createSurvey, createQuestion, getSurveyById, getSurveys, updateSurvey, updateQuestion, deleteSurvey, deleteQuestion, saveAnswers }

@@ -9,7 +9,7 @@ const questionSchema = Schema({
     },
 
     idSurvey: {
-        type: Schema.Types.ObjectId, // Cambiar a ObjectId
+        type: Schema.Types.ObjectId,
         ref: 'Survey'
     },
 
@@ -22,7 +22,7 @@ const questionSchema = Schema({
         required: true
     },
     answers: [
-        {   
+        {
             answer: String,
             count: {
                 type: Number,
@@ -30,7 +30,7 @@ const questionSchema = Schema({
             }
         }
     ],
-
 })
+
 
 module.exports = mongoose.model('Question', questionSchema);
