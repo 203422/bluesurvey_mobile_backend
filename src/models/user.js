@@ -18,6 +18,14 @@ const userSchema = new Schema({
         type: String,
         required: true
     },
+    surveys: [{
+        ref: 'Survey',
+        type: Schema.Types.ObjectId,
+    }],
+    roles: [{
+        ref: 'Role',
+        type: Schema.Types.ObjectId
+    }]
 }, {
     timestamps: true,
     versionKey: false

@@ -11,8 +11,10 @@ router.post('/signup', userController.signUp);
 router.post('/signin', userController.signIn);
 //Obtener un usuario
 router.get('/user', authenticate(), userController.getUser);
+//Obtener todos los usuarios
+router.get('/users', authenticate(), userController.getAllUsers);
 //Crear encuestas
-router.post('/surveys',authenticate(), surveyController.createSurvey);
+router.post('/surveys', authenticate(), surveyController.createSurvey);
 //Crear preguntas
 router.post('/surveys/questions/:id', authenticate(), surveyController.createQuestion);
 //Obtener encuestas

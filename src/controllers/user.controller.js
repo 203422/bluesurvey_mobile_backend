@@ -1,5 +1,6 @@
 const User = require('../models/user');
 const createAccessToken = require('../auth/generateToken')
+const Role = require('../models/role');
 
 const signUp = async (req, res) => {
 
@@ -22,7 +23,9 @@ const signUp = async (req, res) => {
             )
         }
 
-        const newUser = new User({ username, email, password: await User.encryptPassword(password) });
+        const role = await Role.findOne({ name: 'user' })
+
+        const newUser = new User({ username, email, password: await User.encryptPassword(password), roles: [role._id] });
         newUser.save();
         res.status(201).json({
             message: 'Usuario creado correctamente'
@@ -42,27 +45,32 @@ const signIn = async (req, res) => {
             error: 'Todos los campos son requeridos'
         })
     }
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).populate('roles');
 
     if (user) {
+
         const correctPassword = await User.comparePassword(password, user.password)
 
         if (correctPassword) {
 
             const userInfo = {
-                id: user._id, 
-                username: user.username, 
-                email: user.email
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                roles: user.roles,
             }
 
             const accessToken = createAccessToken(userInfo);
 
-            res.status(200).json({
-                id: user._id, email: user.email, username: user.username, token: accessToken
-            });
+            const userInfoUpdated = {
+                ...userInfo, token: accessToken,
+            };
+            console.log(userInfoUpdated);
+            res.status(200).json(userInfoUpdated);
+
         } else {
             res.status(401).json({
-                error: 'Usuario o contraseña incorrecto'
+                error: 'Correo o contraseña incorrecto'
             });
         }
     } else {
@@ -74,15 +82,17 @@ const signIn = async (req, res) => {
 
 const getUser = (req, res) => {
     try {
-        const {id, username, email, password} = req.user;
+        const { id, username, email, password, roles } = req.user;
 
-        const token = createAccessToken({id, username, email, password})
-        
+        const token = createAccessToken({ id, username, email, password, roles })
+
         res.status(200).json({
             id: id,
             email: email,
             username: username,
+            roles: roles,
             token: token,
+
         })
     } catch (error) {
         res.status(500).json({
@@ -91,4 +101,25 @@ const getUser = (req, res) => {
     }
 }
 
-module.exports = { signUp, signIn, getUser }
+const getAllUsers = async (req, res) => {
+
+    try {
+
+        const users = await User.find();
+
+        if (!users) {
+            res.status(404).json({
+                message: 'No se encontraron usuarios registrados'
+            })
+        }
+
+        res.status(200).json(users);
+
+    } catch (error) {
+        res.status(500).json({
+            error: 'Error al obtener datos'
+        })
+    }
+}
+
+module.exports = { signUp, signIn, getUser, getAllUsers }

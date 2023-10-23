@@ -2,11 +2,13 @@ const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const routes = require('./routes/routes')
+const createRoles = require('./libs/initialSetup')
 
 require('dotenv').config();
 
 const port = process.env.PORT || '4000';
 const app = express();
+createRoles.createRoles();
 
 app.use(cors());
 app.use(express.json());

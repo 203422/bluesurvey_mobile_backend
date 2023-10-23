@@ -1,5 +1,6 @@
 const Survey = require('../models/survey');
 const Question = require('../models/question');
+const User = require('../models/user');
 
 const createSurvey = async (req, res) => {
     const { title, description } = req.body;
@@ -16,6 +17,12 @@ const createSurvey = async (req, res) => {
 
         const survey = Survey({ title, description, idUser: req.user.id })
         const newSurvey = await survey.save();
+
+        await User.findByIdAndUpdate(req.user.id,
+            { $push: { surveys: newSurvey._id } },
+            { new: true })
+
+
         res.status(200).json(newSurvey);
 
     } catch (error) {
@@ -75,7 +82,6 @@ const getSurveys = async (req, res) => {
             message: 'Encuestas no encontradas'
         });
     }
-
 }
 
 const getSurveyById = async (req, res) => {
