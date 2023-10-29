@@ -46,7 +46,7 @@ const createQuestion = async (req, res) => {
 
     try {
 
-        const survey = await Survey.findById({ _id: req.params.id })
+        const survey = await Survey.findById({ _id: req.params.id });
         if (!survey) {
             return res.status(404).json({
                 message: 'Encuesta no encontrada'
@@ -59,7 +59,7 @@ const createQuestion = async (req, res) => {
         const updatedSurvey = await Survey.findByIdAndUpdate(
             req.params.id,
             { $push: { questions: questionSaved._id } },
-            { new: true })
+            { new: true }).populate('questions');
 
         res.status(200).json(updatedSurvey);
 
@@ -115,12 +115,19 @@ const updateSurvey = async (req, res) => {
 
 const updateQuestion = async (req, res) => {
     const { id } = req.params;
-    const { question, answers } = req.body;
+    const { question, answers, surveyId } = req.body;
 
     try {
 
-        const questionUpdated = await Question.findByIdAndUpdate(id, { question, answers }, { new: true })
-        res.status(200).json(questionUpdated)
+        await Question.findByIdAndUpdate(id, { question, answers }, { new: true });
+        const updatedSurvey = await Survey.findById(surveyId).populate('questions');
+        if (updatedSurvey) {
+            res.status(200).json(updatedSurvey);
+        } else {
+            res.status(404).json({
+                message: 'Encuestas no encontradas'
+            });
+        }
 
     } catch (error) {
         res.status(500).json({
@@ -131,38 +138,42 @@ const updateQuestion = async (req, res) => {
 }
 
 const deleteSurvey = async (req, res) => {
-
     const { id } = req.params;
 
     try {
-
-        const deleteSurvey = await Survey.findByIdAndDelete(id);
-
-        if (!deleteSurvey) {
+        const survey = await Survey.findById(id);
+        if (!survey) {
             return res.status(404).json({
                 message: 'Encuesta no encontrada'
-            })
+            });
         }
+        const userId = survey.idUser;
 
-        const deleteQuestion = await Question.deleteMany({ idSurvey: id })
-        if (!deleteQuestion) {
-            return res.status(404).json({
-                message: 'Preguntas no encontradas'
-            })
+        const surveyId = survey._id;
+
+        await Survey.findByIdAndDelete(id);
+
+        if (userId) {
+            const user = await User.findById(userId);
+            if (user) {
+                user.surveys.pull(id);
+                await user.save();
+            }
         }
+        await Question.deleteMany({ idSurvey: surveyId });
 
-        res.status(200).json({
-            message: 'Encuesta eliminada'
-        })
+        const remainingSurveys = await Survey.find({ idUser: userId }).populate('questions');
 
+        res.status(200).json(remainingSurveys);
     } catch (error) {
-        console.log(error)
+        console.log(error);
         res.status(500).json({
             error: 'Error al eliminar la encuesta'
-        })
+        });
     }
-
 }
+
+
 
 const deleteQuestion = async (req, res) => {
     const { id } = req.params;
@@ -182,7 +193,7 @@ const deleteQuestion = async (req, res) => {
             idSurvey,
             { $pull: { questions: id } },
             { new: true }
-        );
+        ).populate('questions');
 
         res.status(200).json(updatedSurvey);
 
@@ -204,13 +215,10 @@ const saveAnswers = async (req, res) => {
         for (const openResponse of responses.open) {
             const question = await Question.findById(openResponse.questionId);
             if (question) {
-                // Verifica si ya existe una respuesta igual
                 const existingAnswer = question.answers.find((a) => a.answer === openResponse.answer);
                 if (existingAnswer) {
-                    // Si la respuesta existe, aumenta el contador
                     existingAnswer.count += 1;
                 } else {
-                    // Si la respuesta no existe, agrégala con un contador inicial de 1
                     question.answers.push({ answer: openResponse.answer, count: 1 });
                 }
                 await question.save();
