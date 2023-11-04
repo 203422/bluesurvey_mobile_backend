@@ -26,7 +26,6 @@ const createSurvey = async (req, res) => {
         res.status(200).json(newSurvey);
 
     } catch (error) {
-        console.log(error)
         res.status(500).json({
             error: 'Error al crear la encuesta'
         })
@@ -64,7 +63,6 @@ const createQuestion = async (req, res) => {
         res.status(200).json(updatedSurvey);
 
     } catch (error) {
-        console.log(error)
         res.status(500).json({
             error: 'Error al crear la pregunta'
         });
@@ -88,7 +86,6 @@ const getSurveyById = async (req, res) => {
 
     const survey = await Survey.findById({ _id: req.params.id }).populate('questions');
     if (survey) {
-        console.log(survey)
         res.status(200).json(survey)
     } else {
         res.status(404).json({
@@ -166,7 +163,6 @@ const deleteSurvey = async (req, res) => {
 
         res.status(200).json(remainingSurveys);
     } catch (error) {
-        console.log(error);
         res.status(500).json({
             error: 'Error al eliminar la encuesta'
         });
@@ -198,7 +194,6 @@ const deleteQuestion = async (req, res) => {
         res.status(200).json(updatedSurvey);
 
     } catch (error) {
-        console.log(error)
         res.status(500).json({
             error: 'Error al eliminar la pregunta'
         })
@@ -208,7 +203,6 @@ const deleteQuestion = async (req, res) => {
 const saveAnswers = async (req, res) => {
 
     const { responses } = req.body;
-    console.log(responses);
 
     try {
 
@@ -257,7 +251,6 @@ const saveAnswers = async (req, res) => {
         res.status(500).json({
             'error': 'Eror al guardar las respuestas'
         });
-        console.log(error);
     }
 }
 
