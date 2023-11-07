@@ -65,7 +65,6 @@ const signIn = async (req, res) => {
             const userInfoUpdated = {
                 ...userInfo, token: accessToken,
             };
-            console.log(userInfoUpdated);
             res.status(200).json(userInfoUpdated);
 
         } else {

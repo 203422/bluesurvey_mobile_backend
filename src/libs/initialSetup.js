@@ -29,8 +29,6 @@ const createRoles = async () => {
             await newAdmin.save();
         }
 
-        console.log(values);
-
     } catch (error) {
         console.log(error);
     }
